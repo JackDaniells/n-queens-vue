@@ -1,6 +1,10 @@
 <template>
   <div id="app">
     <div class="info">
+      <span class="text" v-if="execError">Nenhuma solução encontrada</span>
+      <span class="text" v-if="execCompleted">Tempo de execução: {{execTime}}ms</span>
+      <input style="width: 200px" v-model="size" type="number"></input>
+      <button style="width: 200px" v-on:click="startExec()">Iniciar</button>
     </div>
     <div class="tabuleiro">
       <div v-for="(row, key, index) in board" class="row" :key="index">
@@ -21,18 +25,39 @@ export default {
 
   data() {
     return {
+      execError: false,
+      execCompleted: false,
       size: 8,
       delay: 1000,
+      execTime: 0,
       board: [],
+      timeStart: 0
     }
   },
 
   mounted() {
-    this.board = this.generateBoard(this.size);
-    this.solveNQ();
+   
   },
 
   methods: {
+
+    startExec() {
+      this.board = this.generateBoard(this.size);
+      this.timeStart = new Date();
+      this.execCompleted = false;
+      this.solveNQ();
+    },
+
+    solveNQ(){
+      this.board = this.generateBoard(this.size);
+      if(this.recurseNQ(this.board, 0)===false){
+        this.execError = true
+        return false;
+      }
+      this.execCompleted = true;
+      this.execTime = new Date().getMilliseconds() - this.timeStart.getMilliseconds()
+      this.printSolution( );
+    },
 
 
     printSolution(){
@@ -75,16 +100,6 @@ export default {
       }
     },
 
-
-    solveNQ(){
-      this.board = this.generateBoard(this.size);
-      if(this.recurseNQ(this.board, 0)===false){
-        // console.log("No solution found");
-        return false;
-      }
-      this.printSolution( );
-    },
-
     generateBoard(n){
       var board=[];
       for(var i=0; i<n; i++){
@@ -124,6 +139,14 @@ export default {
 
 .item {
   width: 25px
+}
+
+.info {
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content: center;
 }
 
 </style>
