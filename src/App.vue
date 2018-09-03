@@ -5,7 +5,7 @@
       <span class="text" style="margin-bottom: 3px" v-if="execCompleted">Comparações: {{comp}}</span>
       <div class="type-execution" style="margin-bottom: 3px">
         <button style="width: 100px" :class="execType === 1 ? 'isSelected' : 'notSelected'" v-on:click="execType = 1">Backtracking</button>
-        <button style="width: 100px" :class="execType === 2 ? 'isSelected' : 'notSelected'" v-on:click="execType = 2">outro</button>
+        <button style="width: 100px" :class="execType === 2 ? 'isSelected' : 'notSelected'" v-on:click="execType = 2">Hill Climbing</button>
       </div>
       <input style="width: 190px; margin-bottom: 3px" v-model="size" type="number"/>
       <button style="width: 200px; margin-bottom: 3px" v-on:click="startExec()">Iniciar</button>
@@ -52,7 +52,8 @@ export default {
       if (this.execType === 1) {
         this.solveWithBacktracking();
       } else {
-
+        this.board = this.solveNQueens(this.generateState(this.size))
+        console.log(this.board)
       }
     
     },
@@ -124,7 +125,120 @@ export default {
           board[i][col]=0;
         }
       }
-    }
+    },
+
+    /*********************************************** */
+
+    // Count the number or row collisions
+    rowCollisions: function (a) {
+      var collision = 0;
+      for (var i in a) {
+        for (var j in a) {
+          if (j != i) {
+            collision = a[i] == a[j] ? collision+1 : collision;
+          }
+        }
+      }
+      return collision;
+    },
+
+    // Count the number of column collisions
+    diaCollisions: function (a) {
+      var collision = 0;
+      for (var i in a){
+        for (var j in a){
+          if (i != j) {
+            var dp = Math.abs(i-j);
+            collision = a[i] == a[j]+dp ? collision+1 : collision;
+            collision = a[i] == a[j]-dp ? collision+1 : collision;
+          }
+        }
+      }
+      return collision / 2;
+    },
+
+    // Heuristic Evaluation Function for N Queens
+    // We will want to minimize collisions -- also referred to as min-conflicts in general
+    evaluate: function (s) {
+      return this.diaCollisions(s) + this.rowCollisions(s);
+    },
+
+    // Generate a set of candidates.
+    generateCandidates: function(current) {
+        var candidates = [];
+        for (var i = 0; i < current.length; i++) {
+            var start = current.slice(0, i);
+            var end = current.slice(i+1,current.length);
+            for (var j = 1; j <= current.length; j++) {
+                var c = start.concat([(Math.floor((Math.random()*current.length)+1))].concat(end));
+                candidates.push(c);
+            }
+        }
+        return candidates;
+    },
+
+    // Generate a random new state for the N Queens problem of size n
+    generateState: function(n) {
+        var state = [];
+        for(var i = 0; i < n; i++){
+            state[i] = Math.floor(Math.random() * n + 1);
+        }
+        return state;
+    },
+
+    // Helper Function to tell us if our configuration is a solution.
+    isSolution: function (config) {
+        return (this.evaluate(config) === 0);
+    },
+
+    // Workhorse function that solves our puzzle.
+    nQueensBestFirstHillClimbing: function (start) {
+        var best = start;
+        var current;
+        var currentEval = this.evaluate(start);
+
+        while (true) {
+            current = best;
+            var candidates = this.generateCandidates(current);
+            for (var i in candidates){
+              var candidateEval = this.evaluate(candidates[i]);
+              // Lower evaluation number is better for our implementation
+              if (candidateEval < currentEval) {
+                  current =  candidates[i] ;
+                  currentEval = candidateEval;
+              }
+            }
+
+            // If current & best are STILL the same, then we reached a peak.
+            if (best == current)
+                return best;
+
+            best = current;
+        }
+    },
+
+    // Solve the N Queens problem using Random Restart Hill Climbing.
+    solveNQueens: function(state) {
+        var count = 1;
+        state = this.nQueensBestFirstHillClimbing(state);
+
+        while (!this.isSolution(state)){
+            // Random Restart If not a Solution.
+            state = this.generateState(state.length);
+            count++;
+            state = this.nQueensBestFirstHillClimbing(state);
+        }
+
+        // Return the Number of Hill Climbing Random Restarts & the SOlution.
+        return [count, state];
+    },
+
+    //const solver = solveNQueens([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,10];
+    // console.log(solveNQueens(generateState(12)))
+    //console.log(solver)
+
+
+    /*********************************************** */
 
   }
 
