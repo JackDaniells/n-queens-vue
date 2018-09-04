@@ -25,13 +25,12 @@ export default {
   name: 'app',
   components: {
     HelloWorld
-  },
-
+  },  
   data() {
     return {
       execError: false,
       execCompleted: false,
-      size: 8,
+      size: 4,
       delay: 1000,
       execTime: 0,
       board: [],
@@ -52,8 +51,18 @@ export default {
       if (this.execType === 1) {
         this.solveWithBacktracking();
       } else {
-        this.board = this.solveNQueens(this.generateState(this.size))
-        console.log(this.board)
+        this.board = this.generateBoard(this.size);
+        this.$nextTick(() => {
+          var res = this.solveNQueens(this.generateState(this.size))
+          console.log(res)
+          this.execCompleted = true;
+          for(var i = 0; i < this.size; i++) {
+            var pos = res[i]
+            pos--;
+            this.board[i][pos] = 1
+          }
+          this.printSolution()
+        })
       }
     
     },
@@ -135,6 +144,7 @@ export default {
       for (var i in a) {
         for (var j in a) {
           if (j != i) {
+            this.comp++
             collision = a[i] == a[j] ? collision+1 : collision;
           }
         }
@@ -148,6 +158,7 @@ export default {
       for (var i in a){
         for (var j in a){
           if (i != j) {
+            this.comp++
             var dp = Math.abs(i-j);
             collision = a[i] == a[j]+dp ? collision+1 : collision;
             collision = a[i] == a[j]-dp ? collision+1 : collision;
@@ -228,9 +239,9 @@ export default {
             count++;
             state = this.nQueensBestFirstHillClimbing(state);
         }
-
+        console.log('restarts: ' + count)
         // Return the Number of Hill Climbing Random Restarts & the SOlution.
-        return [count, state];
+        return state;
     },
 
     //const solver = solveNQueens([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,10];
